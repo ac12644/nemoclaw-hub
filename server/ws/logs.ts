@@ -1,9 +1,6 @@
 import { spawn, type ChildProcess } from "child_process";
 import type { FastifyInstance } from "fastify";
-import type { Registry } from "../types.js";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const registry: Registry = require("../../lib/registry");
+import * as registry from "../../lib/registry.js";
 
 export default async function logsWs(fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Params: { name: string } }>(

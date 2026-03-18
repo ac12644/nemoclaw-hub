@@ -1,21 +1,17 @@
-//
-// Safe wrapper around bin/lib/runner.js for use in long-running server.
+// Safe wrapper around lib/runner.ts for use in long-running server.
 // Prevents process.exit() from killing the server by using ignoreError mode.
 
-import type { Runner } from "./types.js";
+import { runCapture, ROOT, SCRIPTS } from "../lib/runner.js";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const runner: Runner = require("../lib/runner");
-
-export const { ROOT, SCRIPTS } = runner;
+export { ROOT, SCRIPTS };
 
 export function safeRun(cmd: string): string {
-  return runner.runCapture(cmd, { ignoreError: true }) || "";
+  return runCapture(cmd, { ignoreError: true }) || "";
 }
 
 export function safeRunOrThrow(cmd: string): string {
   try {
-    return runner.runCapture(cmd, { ignoreError: false }) || "";
+    return runCapture(cmd, { ignoreError: false }) || "";
   } catch (err: unknown) {
     const e = err as { stderr?: string; stdout?: string; message?: string };
     const message = e.stderr || e.stdout || e.message || "Command failed";

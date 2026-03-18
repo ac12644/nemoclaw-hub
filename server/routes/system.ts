@@ -1,9 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import type { Nim } from "../types.js";
+import * as nim from "../../lib/nim.js";
 import { safeRun } from "../safe-runner.js";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const nim: Nim = require("../../lib/nim");
 
 export default async function systemRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get("/api/system/health", async () => {

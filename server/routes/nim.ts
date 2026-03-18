@@ -1,10 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import type { Nim, Registry } from "../types.js";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const nimLib: Nim = require("../../lib/nim");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const registry: Registry = require("../../lib/registry");
+import * as nimLib from "../../lib/nim.js";
+import * as registry from "../../lib/registry.js";
 
 export default async function nimRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get("/api/nim/models", async () => {

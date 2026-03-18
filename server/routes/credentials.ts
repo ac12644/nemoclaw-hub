@@ -1,9 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import type { Credentials } from "../types.js";
+import * as creds from "../../lib/credentials.js";
 import * as db from "../db.js";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const creds: Credentials = require("../../lib/credentials");
 
 const ALLOWED_KEYS = [
   "NVIDIA_API_KEY",

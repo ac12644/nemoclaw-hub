@@ -1,11 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import type { Policies, Registry } from "../types.js";
+import * as policies from "../../lib/policies.js";
+import * as registry from "../../lib/registry.js";
 import * as db from "../db.js";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const policies: Policies = require("../../lib/policies");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const registry: Registry = require("../../lib/registry");
 
 export default async function policyRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get("/api/policies/presets", async () => {

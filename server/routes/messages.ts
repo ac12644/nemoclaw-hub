@@ -1,10 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import type { Registry } from "../types.js";
+import * as registry from "../../lib/registry.js";
 import * as db from "../db.js";
 import { safeRun } from "../safe-runner.js";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const registry: Registry = require("../../lib/registry");
 
 export default async function messageRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Params: { sandbox: string }; Querystring: { limit?: string; offset?: string } }>(

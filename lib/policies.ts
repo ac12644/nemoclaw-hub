@@ -1,15 +1,18 @@
-//
-// Policy preset management — list, load, merge, and apply presets.
+import fs from "fs";
+import path from "path";
+import os from "os";
+import { ROOT, run, runCapture } from "./runner.js";
+import * as registry from "./registry.js";
 
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
-const { ROOT, run, runCapture } = require("./runner");
-const registry = require("./registry");
+export const PRESETS_DIR = path.join(ROOT, "policies", "presets");
 
-const PRESETS_DIR = path.join(ROOT, "policies", "presets");
+export interface PresetInfo {
+  file: string;
+  name: string;
+  description: string;
+}
 
-function listPresets() {
+export function listPresets(): PresetInfo[] {
   if (!fs.existsSync(PRESETS_DIR)) return [];
   return fs
     .readdirSync(PRESETS_DIR)
@@ -26,7 +29,7 @@ function listPresets() {
     });
 }
 
-function loadPreset(name) {
+export function loadPreset(name: string): string | null {
   const file = path.join(PRESETS_DIR, `${name}.yaml`);
   if (!fs.existsSync(file)) {
     console.error(`  Preset not found: ${name}`);
@@ -35,8 +38,8 @@ function loadPreset(name) {
   return fs.readFileSync(file, "utf-8");
 }
 
-function getPresetEndpoints(content) {
-  const hosts = [];
+export function getPresetEndpoints(content: string): string[] {
+  const hosts: string[] = [];
   const regex = /host:\s*([^\s,}]+)/g;
   let match;
   while ((match = regex.exec(content)) !== null) {
@@ -45,34 +48,22 @@ function getPresetEndpoints(content) {
   return hosts;
 }
 
-/**
- * Extract just the network_policies entries (indented content under
- * the `network_policies:` key) from a preset file, stripping the
- * `preset:` metadata header.
- */
-function extractPresetEntries(presetContent) {
+function extractPresetEntries(presetContent: string): string | null {
   const npMatch = presetContent.match(/^network_policies:\n([\s\S]*)$/m);
   if (!npMatch) return null;
   return npMatch[1].trimEnd();
 }
 
-/**
- * Parse the output of `openshell policy get --full` which has a metadata
- * header (Version, Hash, etc.) followed by `---` and then the actual YAML.
- */
-function parseCurrentPolicy(raw) {
+function parseCurrentPolicy(raw: string): string {
   if (!raw) return "";
   const sep = raw.indexOf("---");
   if (sep === -1) return raw;
   return raw.slice(sep + 3).trim();
 }
 
-function applyPreset(sandboxName, presetName) {
+export function applyPreset(sandboxName: string, presetName: string): boolean {
   const presetContent = loadPreset(presetName);
-  if (!presetContent) {
-    console.error(`  Cannot load preset: ${presetName}`);
-    return false;
-  }
+  if (!presetContent) return false;
 
   const presetEntries = extractPresetEntries(presetContent);
   if (!presetEntries) {
@@ -80,29 +71,24 @@ function applyPreset(sandboxName, presetName) {
     return false;
   }
 
-  // Get current policy YAML from sandbox
   let rawPolicy = "";
   try {
     rawPolicy = runCapture(
       `openshell policy get --full ${sandboxName} 2>/dev/null`,
       { ignoreError: true }
     );
-  } catch {}
+  } catch { /* ignore */ }
 
-  const currentPolicy = parseCurrentPolicy(rawPolicy);
+  let currentPolicy = parseCurrentPolicy(rawPolicy);
 
-  // Merge: inject preset entries under the existing network_policies key
-  let merged;
+  let merged: string;
   if (currentPolicy && currentPolicy.includes("network_policies:")) {
-    // Find the network_policies: line and append the new entries after it
-    // We need to insert before the next top-level key or end of file
     const lines = currentPolicy.split("\n");
-    const result = [];
+    const result: string[] = [];
     let inNetworkPolicies = false;
     let inserted = false;
 
     for (const line of lines) {
-      // Detect top-level keys (no leading whitespace, ends with colon)
       const isTopLevel = /^\S.*:/.test(line);
 
       if (line.trim() === "network_policies:" || line.trim().startsWith("network_policies:")) {
@@ -112,7 +98,6 @@ function applyPreset(sandboxName, presetName) {
       }
 
       if (inNetworkPolicies && isTopLevel && !inserted) {
-        // We hit the next top-level key — insert preset entries before it
         result.push(presetEntries);
         inserted = true;
         inNetworkPolicies = false;
@@ -121,25 +106,20 @@ function applyPreset(sandboxName, presetName) {
       result.push(line);
     }
 
-    // If network_policies was the last section, append at end
     if (inNetworkPolicies && !inserted) {
       result.push(presetEntries);
     }
 
     merged = result.join("\n");
   } else if (currentPolicy) {
-    // No network_policies section yet — append one
-    // Ensure version field exists
     if (!currentPolicy.includes("version:")) {
       currentPolicy = "version: 1\n" + currentPolicy;
     }
     merged = currentPolicy + "\n\nnetwork_policies:\n" + presetEntries;
   } else {
-    // No current policy at all
     merged = "version: 1\n\nnetwork_policies:\n" + presetEntries;
   }
 
-  // Write temp file and apply
   const tmpFile = path.join(os.tmpdir(), `nemoclaw-policy-${Date.now()}.yaml`);
   fs.writeFileSync(tmpFile, merged, "utf-8");
 
@@ -150,7 +130,6 @@ function applyPreset(sandboxName, presetName) {
     fs.unlinkSync(tmpFile);
   }
 
-  // Update registry
   const sandbox = registry.getSandbox(sandboxName);
   if (sandbox) {
     const pols = sandbox.policies || [];
@@ -163,16 +142,7 @@ function applyPreset(sandboxName, presetName) {
   return true;
 }
 
-function getAppliedPresets(sandboxName) {
+export function getAppliedPresets(sandboxName: string): string[] {
   const sandbox = registry.getSandbox(sandboxName);
   return sandbox ? sandbox.policies || [] : [];
 }
-
-module.exports = {
-  PRESETS_DIR,
-  listPresets,
-  loadPreset,
-  getPresetEndpoints,
-  applyPreset,
-  getAppliedPresets,
-};

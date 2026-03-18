@@ -1,12 +1,8 @@
 import type { FastifyInstance } from "fastify";
-import type { Registry, Nim } from "../types.js";
+import * as registry from "../../lib/registry.js";
+import * as nim from "../../lib/nim.js";
 import { safeRun } from "../safe-runner.js";
 import * as db from "../db.js";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const registry: Registry = require("../../lib/registry");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const nim: Nim = require("../../lib/nim");
 
 export default async function sandboxRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get("/api/sandboxes", async () => {
