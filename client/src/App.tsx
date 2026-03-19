@@ -5,9 +5,6 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import AgentDetail from "./pages/AgentDetail";
 import AuditLog from "./pages/AuditLog";
-import WorkflowList from "./pages/WorkflowList";
-import WorkflowDetail from "./pages/WorkflowDetail";
-import WorkflowRunView from "./pages/WorkflowRunView";
 
 function LoginPage({ onLogin }: { onLogin: () => void }) {
   const [token, setToken] = useState("");
@@ -33,10 +30,10 @@ function LoginPage({ onLogin }: { onLogin: () => void }) {
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 w-full max-w-md">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-8 h-8 rounded bg-green-500" />
-          <h1 className="text-xl font-bold text-white">AgentHub</h1>
+          <h1 className="text-xl font-bold text-white">NemoClaw Hub</h1>
         </div>
         <p className="text-gray-400 text-sm mb-6">
-          Enter the access token from <code className="text-green-400">~/.agenthub/hub-token.json</code>
+          Enter the access token from <code className="text-green-400">~/.nemoclaw/hub-token.json</code>
         </p>
         <form onSubmit={handleSubmit}>
           <input
@@ -98,9 +95,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/agents/:name" element={<AgentDetail />} />
-          <Route path="/workflows" element={<WorkflowList />} />
-          <Route path="/workflows/:id" element={<WorkflowDetail />} />
-          <Route path="/workflows/runs/:runId" element={<WorkflowRunView />} />
           <Route path="/audit" element={<AuditLog />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

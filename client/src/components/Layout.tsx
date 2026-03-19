@@ -3,8 +3,7 @@ import { api } from "../api";
 import type { ReactNode } from "react";
 
 const nav = [
-  { path: "/", label: "Agents" },
-  { path: "/workflows", label: "Workflows" },
+  { path: "/", label: "Dashboard" },
   { path: "/audit", label: "Audit Log" },
 ];
 
@@ -28,7 +27,7 @@ export default function Layout({
       <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col">
         <div className="p-4 border-b border-gray-800 flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-green-500" />
-          <span className="font-bold text-sm">AgentHub</span>
+          <span className="font-bold text-sm">NemoClaw Hub</span>
         </div>
         <nav className="flex-1 p-2">
           {nav.map((item) => (

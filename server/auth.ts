@@ -1,11 +1,11 @@
 import crypto from "crypto";
 import path from "path";
+import os from "os";
 import fs from "fs";
 import * as db from "./db.js";
-import { TOKEN_PATH } from "../lib/config.js";
 import type { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from "fastify";
 
-export { TOKEN_PATH };
+export const TOKEN_PATH = path.join(os.homedir(), ".nemoclaw", "hub-token.json");
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export function getToken(): string {

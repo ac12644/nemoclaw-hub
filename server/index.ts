@@ -8,9 +8,6 @@ import { fileURLToPath } from "url";
 
 import * as db from "./db.js";
 import { getToken, login, logout, authHook } from "./auth.js";
-import { getProvider } from "./providers/index.js";
-import { WorkflowExecutor } from "./workflows/executor.js";
-import { WorkflowScheduler } from "./workflows/scheduler.js";
 
 // Route plugins
 import sandboxRoutes from "./routes/sandboxes.js";
@@ -20,12 +17,10 @@ import credentialRoutes from "./routes/credentials.js";
 import messageRoutes from "./routes/messages.js";
 import auditRoutes from "./routes/audit.js";
 import systemRoutes from "./routes/system.js";
-import workflowRoutes from "./routes/workflows.js";
 
 // WebSocket plugins
 import logsWs from "./ws/logs.js";
 import activityWs from "./ws/activity.js";
-import workflowRunsWs from "./ws/workflow-runs.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.HUB_PORT || "3100");
@@ -36,16 +31,6 @@ const fastify = Fastify({ logger: true });
 async function start(): Promise<void> {
   // Initialize database
   db.getDb();
-
-  // Initialize provider
-  const provider = getProvider();
-  fastify.log.info(`Provider: ${provider.name}`);
-
-  // Initialize workflow scheduler
-  const executor = new WorkflowExecutor(provider);
-  const scheduler = new WorkflowScheduler(executor);
-  scheduler.start();
-  fastify.log.info("Workflow scheduler started");
 
   // Plugins
   await fastify.register(fastifyCors, {
@@ -92,7 +77,6 @@ async function start(): Promise<void> {
     await app.register(credentialRoutes);
     await app.register(messageRoutes);
     await app.register(auditRoutes);
-    await app.register(workflowRoutes);
   });
 
   // Protected WebSocket routes
@@ -100,7 +84,6 @@ async function start(): Promise<void> {
     app.addHook("preHandler", authHook);
     await app.register(logsWs);
     await app.register(activityWs);
-    await app.register(workflowRunsWs);
   });
 
   // Serve frontend static files in production
@@ -111,6 +94,7 @@ async function start(): Promise<void> {
       wildcard: false,
     });
 
+    // SPA fallback
     fastify.setNotFoundHandler((request, reply) => {
       if (request.url.startsWith("/api/")) {
         reply.code(404).send({ error: "Not found" });
@@ -119,19 +103,14 @@ async function start(): Promise<void> {
       }
     });
   } catch {
+    // Client not built yet — dev mode
     fastify.log.info("Client dist not found, serving API only");
   }
 
   // Print access token on first start
   const token = getToken();
   fastify.log.info(`Access token: ${token}`);
-  fastify.log.info(`Provider: ${provider.name} | Port: ${PORT}`);
-
-  // Graceful shutdown
-  fastify.addHook("onClose", () => {
-    scheduler.stop();
-    db.close();
-  });
+  fastify.log.info(`Login: POST ${HOST}:${PORT}/api/auth/login { "token": "<token>" }`);
 
   await fastify.listen({ port: PORT, host: HOST });
 }

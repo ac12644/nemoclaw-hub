@@ -98,30 +98,6 @@ export const api = {
     }>(`/audit?${q}`);
   },
 
-  // Workflows
-  createWorkflow: (yaml: string) =>
-    request<{ id: string; name: string }>("/workflows", {
-      method: "POST",
-      body: JSON.stringify({ yaml }),
-    }),
-  listWorkflows: () => request<{ workflows: Record<string, unknown>[] }>("/workflows"),
-  getWorkflow: (id: string) => request<Record<string, unknown>>(`/workflows/${id}`),
-  updateWorkflow: (id: string, yaml: string) =>
-    request<{ ok: boolean }>(`/workflows/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ yaml }),
-    }),
-  deleteWorkflow: (id: string) =>
-    request<{ ok: boolean }>(`/workflows/${id}`, { method: "DELETE" }),
-  triggerRun: (id: string) =>
-    request<{ runId: string }>(`/workflows/${id}/run`, { method: "POST" }),
-  listRuns: (workflowId: string) =>
-    request<{ runs: Record<string, unknown>[] }>(`/workflows/${workflowId}/runs`),
-  getRun: (runId: string) =>
-    request<{ run: Record<string, unknown>; steps: Record<string, unknown>[] }>(
-      `/workflows/runs/${runId}`
-    ),
-
   // System
   health: () => request<{ ok: boolean }>("/system/health"),
   credentials: () =>

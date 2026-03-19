@@ -2,7 +2,9 @@ import fs from "fs";
 import path from "path";
 import readline from "readline";
 import { execSync } from "child_process";
-import { CREDS_DIR, CREDS_FILE } from "./config.js";
+
+const CREDS_DIR = path.join(process.env.HOME || "/tmp", ".nemoclaw");
+const CREDS_FILE = path.join(CREDS_DIR, "credentials.json");
 
 export function loadCredentials(): Record<string, string> {
   try {
@@ -89,4 +91,4 @@ export async function ensureGithubToken(): Promise<void> {
   process.env.GITHUB_TOKEN = token;
 }
 
-export { CREDS_DIR, CREDS_FILE } from "./config.js";
+export { CREDS_DIR, CREDS_FILE };
