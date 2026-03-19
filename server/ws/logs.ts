@@ -16,9 +16,17 @@ export default async function logsWs(fastify: FastifyInstance): Promise<void> {
         return;
       }
 
+      // SSH into the sandbox and tail system logs
       let child: ChildProcess | null = spawn(
-        "openshell",
-        ["sandbox", "logs", "--follow", name],
+        "ssh",
+        [
+          "-o", "StrictHostKeyChecking=no",
+          "-o", "UserKnownHostsFile=/dev/null",
+          "-o", "LogLevel=ERROR",
+          "-o", `ProxyCommand=openshell ssh-proxy --gateway-name nemoclaw --name ${name}`,
+          `sandbox@openshell-${name}`,
+          "tail -f /var/log/*.log /tmp/*.log 2>/dev/null || while true; do echo '[sandbox] heartbeat'; sleep 10; done",
+        ],
         { stdio: ["ignore", "pipe", "pipe"] }
       );
 
@@ -43,9 +51,10 @@ export default async function logsWs(fastify: FastifyInstance): Promise<void> {
       });
 
       child.stderr?.on("data", (data: Buffer) => {
-        socket.send(
-          JSON.stringify({ type: "stderr", line: data.toString().trim() })
-        );
+        const msg = data.toString().trim();
+        if (msg) {
+          socket.send(JSON.stringify({ type: "stderr", line: msg }));
+        }
       });
 
       child.on("exit", (code) => {
