@@ -1,8 +1,10 @@
 import { execSync, spawnSync } from "child_process";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 
-export const ROOT = path.resolve(import.meta.dirname, "..");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+export const ROOT = path.resolve(__dirname, "..");
 export const SCRIPTS = path.join(ROOT, "scripts");
 
 // Auto-detect Colima Docker socket
