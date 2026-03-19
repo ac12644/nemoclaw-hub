@@ -31,9 +31,9 @@ export default async function messageRoutes(fastify: FastifyInstance): Promise<v
 
       db.insertMessage(sandbox, "user", content);
 
-      const escaped = content.replace(/"/g, '\\"').replace(/\$/g, "\\$");
+      const escaped = content.replace(/'/g, "'\\''");
       const response = safeRun(
-        `openshell sandbox exec ${sandbox} -- openclaw agent --agent main --local -m "${escaped}" --session-id hub 2>/dev/null`
+        `ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ProxyCommand='openshell ssh-proxy --gateway-name nemoclaw --name ${sandbox}' sandbox@openshell-${sandbox} "openclaw agent --agent main --local -m '${escaped}' --session-id hub" 2>/dev/null`
       );
 
       const assistantContent = response.trim() || "(no response)";

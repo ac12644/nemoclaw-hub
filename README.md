@@ -4,6 +4,8 @@ Web dashboard for managing [NemoClaw](https://github.com/NVIDIA/NemoClaw) sandbo
 
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue)
 
+![NemoClaw Hub](screenshot/Screenshot1.png)
+
 ## What It Does
 
 NemoClaw Hub wraps the NemoClaw CLI into a REST API + WebSocket backend with a React frontend. Manage multiple sandboxed agents, chat with them, edit network policies, stream logs, and view audit trails — all from one interface.
