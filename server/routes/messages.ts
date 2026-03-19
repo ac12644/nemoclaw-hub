@@ -36,7 +36,13 @@ export default async function messageRoutes(fastify: FastifyInstance): Promise<v
         `ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ProxyCommand='openshell ssh-proxy --gateway-name nemoclaw --name ${sandbox}' sandbox@openshell-${sandbox} "openclaw agent --agent main --local -m '${escaped}' --session-id hub" 2>/dev/null`
       );
 
-      const assistantContent = response.trim() || "(no response)";
+      // Strip plugin banner lines like [plugins] ... and leading/trailing whitespace
+      const cleaned = response
+        .split("\n")
+        .filter((line) => !line.startsWith("[plugins]") && !line.startsWith("[system]"))
+        .join("\n")
+        .trim();
+      const assistantContent = cleaned || "(no response)";
       db.insertMessage(sandbox, "assistant", assistantContent);
       db.insertAudit(sandbox, "message.sent", { preview: content.slice(0, 100) });
 
