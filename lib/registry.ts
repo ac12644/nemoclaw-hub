@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
-
-const REGISTRY_FILE = path.join(process.env.HOME || "/tmp", ".nemoclaw", "sandboxes.json");
+import { REGISTRY_FILE } from "./config.js";
 
 export interface SandboxEntry {
   name: string;

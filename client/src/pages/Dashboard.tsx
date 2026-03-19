@@ -37,9 +37,9 @@ export default function Dashboard() {
 
       {sandboxes.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-12 text-center">
-          <p className="text-gray-400 mb-2">No sandboxes found</p>
+          <p className="text-gray-400 mb-2">No agents found</p>
           <p className="text-gray-600 text-sm">
-            Run <code className="text-green-400">nemoclaw onboard</code> to create one.
+            Create a sandbox using the CLI or set <code className="text-green-400">HUB_PROVIDER=docker</code> to use Docker containers.
           </p>
         </div>
       ) : (

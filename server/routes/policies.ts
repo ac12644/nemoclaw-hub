@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import * as policies from "../../lib/policies.js";
-import * as registry from "../../lib/registry.js";
+import { getProvider } from "../providers/index.js";
 import * as db from "../db.js";
 
 export default async function policyRoutes(fastify: FastifyInstance): Promise<void> {
@@ -27,10 +27,10 @@ export default async function policyRoutes(fastify: FastifyInstance): Promise<vo
   fastify.get<{ Params: { name: string } }>(
     "/api/sandboxes/:name/policies",
     async (request, reply) => {
-      const { name } = request.params;
-      const sandbox = registry.getSandbox(name);
+      const provider = getProvider();
+      const sandbox = await provider.get(request.params.name);
       if (!sandbox) return reply.code(404).send({ error: "Sandbox not found" });
-      return { policies: policies.getAppliedPresets(name) };
+      return { policies: sandbox.policies };
     }
   );
 
@@ -40,20 +40,23 @@ export default async function policyRoutes(fastify: FastifyInstance): Promise<vo
       const { name } = request.params;
       const { preset } = request.body || {};
 
-      const sandbox = registry.getSandbox(name);
+      const provider = getProvider();
+      const sandbox = await provider.get(name);
       if (!sandbox) return reply.code(404).send({ error: "Sandbox not found" });
       if (!preset) return reply.code(400).send({ error: "Missing preset name" });
 
-      try {
-        const ok = policies.applyPreset(name, preset);
-        if (!ok) return reply.code(500).send({ error: "Failed to apply preset" });
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        return reply.code(500).send({ error: message });
+      if (provider.applyPolicy) {
+        try {
+          await provider.applyPolicy(name, preset);
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Unknown error";
+          return reply.code(500).send({ error: message });
+        }
       }
 
       db.insertAudit(name, "policy.applied", { preset });
-      return { ok: true, applied: policies.getAppliedPresets(name) };
+      const updated = await provider.get(name);
+      return { ok: true, applied: updated?.policies || [] };
     }
   );
 }

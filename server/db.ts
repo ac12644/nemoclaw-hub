@@ -1,10 +1,9 @@
 import Database from "better-sqlite3";
 import path from "path";
-import os from "os";
 import fs from "fs";
+import { DB_PATH, CONFIG_DIR } from "../lib/config.js";
 
-const DB_DIR = path.join(os.homedir(), ".nemoclaw");
-export const DB_PATH = path.join(DB_DIR, "hub.db");
+export { DB_PATH };
 
 let _db: Database.Database | null = null;
 
@@ -55,6 +54,43 @@ function migrate(db: Database.Database): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       expires_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS workflows (
+      id           TEXT PRIMARY KEY,
+      name         TEXT NOT NULL UNIQUE,
+      yaml_content TEXT NOT NULL,
+      schedule     TEXT,
+      enabled      INTEGER NOT NULL DEFAULT 1,
+      created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS workflow_runs (
+      id           TEXT PRIMARY KEY,
+      workflow_id  TEXT NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,
+      status       TEXT NOT NULL CHECK(status IN ('pending','running','completed','failed','cancelled')),
+      trigger      TEXT NOT NULL DEFAULT 'manual',
+      started_at   TEXT NOT NULL DEFAULT (datetime('now')),
+      completed_at TEXT,
+      error        TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_wfruns_workflow
+      ON workflow_runs(workflow_id, started_at);
+
+    CREATE TABLE IF NOT EXISTS workflow_step_runs (
+      id           TEXT PRIMARY KEY,
+      run_id       TEXT NOT NULL REFERENCES workflow_runs(id) ON DELETE CASCADE,
+      step_name    TEXT NOT NULL,
+      status       TEXT NOT NULL CHECK(status IN ('pending','running','completed','failed','skipped')),
+      output       TEXT,
+      started_at   TEXT,
+      completed_at TEXT,
+      error        TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_wfstepruns_run
+      ON workflow_step_runs(run_id);
   `);
 }
 
